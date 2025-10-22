@@ -99,4 +99,5 @@ process.on("beforeExit", async () => {
   await prisma.$disconnect();
 });
 
+//     "start": "node src/index.js & ngrok http 3000",
 export default app;

@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js & ngrok http 3000",
+    "start": "node src/index.js",
     "build": "prisma generate",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
