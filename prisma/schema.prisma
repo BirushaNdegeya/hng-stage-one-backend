@@ -14,14 +14,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// prisma/schema.prisma
 model StringData {
   id                      String   @id
-  value                   String
+  value                   String   @unique
   length                  Int
   is_palindrome           Boolean
   unique_characters       Int
   word_count              Int
-  sha256_hash             String
+  sha256_hash             String   @unique
   character_frequency_map Json
   created_at              DateTime @default(now())
+
+  @@map("string_data")
 }

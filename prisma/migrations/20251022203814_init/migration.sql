@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "StringData" (
+CREATE TABLE "string_data" (
     "id" TEXT NOT NULL,
     "value" TEXT NOT NULL,
     "length" INTEGER NOT NULL,
@@ -10,5 +10,11 @@ CREATE TABLE "StringData" (
     "character_frequency_map" JSONB NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "StringData_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "string_data_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "string_data_value_key" ON "string_data"("value");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "string_data_sha256_hash_key" ON "string_data"("sha256_hash");

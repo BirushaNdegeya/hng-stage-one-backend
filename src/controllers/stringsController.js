@@ -1,58 +1,66 @@
 import { prisma } from "../utils/prisma.js";
 import { computeStringProperties } from "../utils/compute-string-propreties.js";
+import crypto from "crypto";
+import { withRetry } from "../utils/dbRetry.js";
 
 // POST /strings
 export const createString = async (req, res) => {
   try {
     const { value } = req.body;
 
-    // Validate request body exists
-    if (!req.body || typeof req.body !== "object") {
-      return res.status(400).json({ error: "Invalid request body" });
-    }
-
-    // Check if value field exists
-    if (value === undefined || value === null) {
-      return res.status(400).json({ error: 'Missing "value" field' });
-    }
-
-    // Check if value is a string
-    if (typeof value !== "string") {
+    // Basic validation
+    if (!value || typeof value !== "string") {
       return res
-        .status(422)
-        .json({ error: 'Invalid data type for "value" (must be string)' });
+        .status(400)
+        .json({ error: 'Invalid or missing "value" field' });
     }
 
-    // Compute properties
-    const properties = computeStringProperties(value);
-    const id = properties.sha256_hash;
+    // SIMPLE properties computation (avoid external function)
+    const length = value.length;
 
-    // Check if string already exists
-    const existing = await prisma.stringData.findUnique({
-      where: { id },
-    });
+    // Case-insensitive palindrome check
+    const cleaned = value.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const is_palindrome = cleaned === cleaned.split("").reverse().join("");
 
+    const unique_characters = new Set(value).size;
+
+    // Word count
+    const word_count =
+      value.trim() === "" ? 0 : value.trim().split(/\s+/).length;
+
+    // SHA256 hash
+    const sha256_hash = crypto.createHash("sha256").update(value).digest("hex");
+
+    // Character frequency
+    const character_frequency_map = {};
+    for (const char of value) {
+      character_frequency_map[char] = (character_frequency_map[char] || 0) + 1;
+    }
+
+    const id = sha256_hash;
+
+    // Check existing
+    const existing = await withRetry(() => prisma.stringData.findUnique({ where: { id } }));
     if (existing) {
       return res
         .status(409)
         .json({ error: "String already exists in the system" });
     }
 
-    // Store the string
-    const stringData = await prisma.stringData.create({
+    // Create with minimal data
+    const stringData = await withRetry(() => prisma.stringData.create({
       data: {
         id,
         value,
-        length: properties.length,
-        is_palindrome: properties.is_palindrome,
-        unique_characters: properties.unique_characters,
-        word_count: properties.word_count,
-        sha256_hash: properties.sha256_hash,
-        character_frequency_map: properties.character_frequency_map,
+        length,
+        is_palindrome,
+        unique_characters,
+        word_count,
+        sha256_hash,
+        character_frequency_map,
       },
-    });
+    }));
 
-    // Return 201 Created
     res.status(201).json({
       id: stringData.id,
       value: stringData.value,
@@ -67,9 +75,8 @@ export const createString = async (req, res) => {
       created_at: stringData.created_at.toISOString(),
     });
   } catch (error) {
-    console.error("Detailed error in POST /strings:", error);
+    console.error("POST Error:", error);
 
-    // Handle specific Prisma errors
     if (error.code === "P2002") {
       return res
         .status(409)
@@ -78,10 +85,7 @@ export const createString = async (req, res) => {
 
     res.status(500).json({
       error: "Internal server error",
-      details:
-        process.env.NODE_ENV === "production"
-          ? "Contact support"
-          : error.message,
+      ...(process.env.NODE_ENV !== "production" && { debug: error.message }),
     });
   }
 };
@@ -100,9 +104,9 @@ export const getStringByValue = async (req, res) => {
     const properties = computeStringProperties(value);
     const id = properties.sha256_hash;
 
-    const stringData = await prisma.stringData.findUnique({
+    const stringData = await withRetry(() => prisma.stringData.findUnique({
       where: { id },
-    });
+    }));
 
     if (!stringData) {
       return res
@@ -219,10 +223,10 @@ export const getStringsWithFilters = async (req, res) => {
   }
 
   try {
-    let stringData = await prisma.stringData.findMany({
+    let stringData = await withRetry(() => prisma.stringData.findMany({
       where: filters,
       orderBy: { created_at: "desc" },
-    });
+    }));
 
     // Apply contains_character filter if specified
     if (contains_character !== undefined) {
@@ -364,10 +368,10 @@ export const getStringsByNaturalLanguage = async (req, res) => {
     // Build database query from parsed filters
     const dbFilters = buildDatabaseFilters(parsedFilters);
 
-    let stringData = await prisma.stringData.findMany({
+    let stringData = await withRetry(() => prisma.stringData.findMany({
       where: dbFilters,
       orderBy: { created_at: "desc" },
-    });
+    }));
 
     // Apply contains_character filter in memory if specified
     if (parsedFilters.contains_character) {

@@ -2,8 +2,8 @@
 # Complete cURL test suite for String Analysis API
 # Replace localhost:3000 with your actual server URL
 
-BASE_URL="http://localhost:3000"
-
+# BASE_URL="http://localhost:3000"
+BASE_URL="https://darin-lowliest-savanna.ngrok-free.dev"
 echo "=========================================="
 echo "1. POST /strings - Create/Analyze Strings"
 echo "=========================================="
