@@ -1,12 +1,17 @@
 {
-  "name": "hng-stage-zero-backend",
+  "name": "hng-stage-one-backend",
   "version": "1.0.0",
-  "description": "A RESTful API endpoint that serves profile information combined with dynamic cat facts from an external API. This project demonstrates API integration, JSON response formatting, and dynamic data handling. ",
+  "description": "RESTful API service that analyzes strings and stores their computed properties.",
   "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node prisma/seed.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -18,10 +23,15 @@
   "license": "ISC",
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
+    "@prisma/client": "6.17.1",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "express-rate-limit": "^8.1.0"
+    "express-rate-limit": "^8.1.0",
+    "prisma": "^6.17.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
