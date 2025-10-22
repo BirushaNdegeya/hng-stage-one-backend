@@ -74,9 +74,6 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  *                   format: date-time
  */
 app.get("/", function (req, res) {
-  console.log(
-    `[${new Date().toISOString()}] ${req.method} ${req.path} - ${req.ip}`
-  );
   res.status(200).json({
     message: "Welcome to HNG Stage One Backend API",
     timestamp: new Date().toISOString(),
